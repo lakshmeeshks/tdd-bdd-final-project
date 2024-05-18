@@ -29,6 +29,7 @@ import logging
 from decimal import Decimal
 from unittest import TestCase
 from service import app
+from urllib.parse import quote_plus
 from service.common import status
 from service.models import db, init_db, Product
 from tests.factories import ProductFactory
@@ -218,16 +219,54 @@ class TestProductRoutes(TestCase):
         self.assertEqual(len(response.data), 0)
         response = self.client.get(f"{BASE_URL}/{test_product.id}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(get_product_count(),)
+        self.assertEqual(self.get_product_count(), 4)
 
-    def test_get_product_list(self):
+    def test_get_all_products(self):
         """It should get list of products"""
+        response = self.client.get(f"{BASE_URL}")
+        response.get_json()
         self._create_products(5)
         response = self.client.get(f"{BASE_URL}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertEqual(len(data), 5)
-        
+    
+    def test_query_by_name(self):
+        """It should Query Products by name"""
+        products = self._create_products(5)
+        name = products[0].name
+        name_count = len([product for product in products if product.name == name])
+        response = self.client.get(BASE_URL, query_string =f"name={quote_plus(name)}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), name_count)
+        for product in data:
+            self.assertEqual(product["name"], name)
+
+    def test_query_by_category(self):
+        """ Cateogy filter"""
+        products = self._create_products(10)
+        category = products[0].category
+        count_category = len([product for product in products if product.category == category])
+        response = self.client.get(BASE_URL, query_string=f"category={category.name}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data),count_category)
+        for product in data:
+            self.assertEqual(product["category"],category.name)
+
+    def test_query_by_category(self):
+        """ Cateogy filter"""
+        products = self._create_products(10)
+        availability = products[0].available
+        count_availability = len([product for product in products if product.available == availability])
+        response = self.client.get(BASE_URL, query_string=f"available={availability}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data),count_availability)
+        for product in data:
+            self.assertEqual(product["available"],availability)
+
     ######################################################################
     # Utility functions
     ######################################################################
