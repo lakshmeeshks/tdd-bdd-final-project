@@ -132,3 +132,27 @@ def step_impl(context, element_name, text_string):
     )
     element.clear()
     element.send_keys(text_string)
+
+
+@then(u'I should see the message "{message}"')
+def step_impl(context,message):
+    raise NotImplementedError(u'STEP: Then I should see the message "Success"')
+
+
+@when(u'I press the "{button}" button')
+def step_impl(context,button):
+    button_id = button.lower() + '-btn'
+    context.driver.find_element(By.ID, button_id).click()
+
+
+@then(u'I should see "{text}" in the results')
+def step_impl(context,text):
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element_value(By.ID, 'search_results')
+        , name
+    )
+    assert(found)
+
+@then(u'I should not see "{text}" in the results')
+def step_impl(context,text):
+    raise NotImplementedError(u'STEP: Then I should not see "Hat" in the results')
